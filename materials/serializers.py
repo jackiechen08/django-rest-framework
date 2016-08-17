@@ -1,13 +1,13 @@
 from rest_framework import serializers
 from materials.models import Polymer, Producer,Product, LANGUAGE_CHOICES, STYLE_CHOICES
-
+from django.contrib.auth.models import User
 
 class ProductSerializer(serializers.ModelSerializer):
     #polymer_name = serializers.StringRelatedField()
     #producer_name =serializers.StringRelatedField() 
+    owner = serializers.ReadOnlyField(source='owner.username')
     class Meta:
         model = Product
-        #fields = ('grade_name', 'polymer', 'producer', 'mold_temperature', 'melt_temperature')
         fields = '__all__'
 
     def create(self, validated_data):
@@ -38,10 +38,11 @@ class ProductSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
         #We will let the user update their username and tagline attributes for now. If these keys are present in the arrays dictionary, we will use the new value. Otherwise, the current value of the instance object is used. Here, instance is of type Account.
-class ProducerSerializer(serializers.ModelSerializer):
+class ProducerSerializer(serializers.HyperlinkedModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
     class Meta:
         model = Producer
-        fields = '__all__'
+        fields = ('url', 'id','producer_name','owner')
 
     def create(self, validated_data):
         producer_name = Producer.objects.create(**validated_data)
@@ -53,8 +54,9 @@ class ProducerSerializer(serializers.ModelSerializer):
         return instance
 
 
-class PolymerSerializer(serializers.ModelSerializer):
-    class Meta:
+class PolymerSerializer(serializers.HyperlinkedModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
+    class Meta:       
         model = Polymer
         fields = '__all__'
 
@@ -66,3 +68,12 @@ class PolymerSerializer(serializers.ModelSerializer):
         instance.polymer_name = validated_data.get('polymer_name', instance.polymer_name)
         instance.save()
         return instance
+
+
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    polymers = serializers.HyperlinkedRelatedField(many=True, view_name='polymer-detail', read_only = True)
+    producers = serializers.HyperlinkedRelatedField(many=True,view_name='producer-detail', read_only = True)
+    products = serializers.HyperlinkedRelatedField(many=True,  view_name='product-detail', read_only = True)
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'polymers', 'producers', 'products')

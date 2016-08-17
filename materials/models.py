@@ -8,11 +8,13 @@ STYLE_CHOICES = sorted((item, item) for item in get_all_styles())
 
 class Polymer(models.Model):
 	polymer_name = models.CharField(max_length = 100)
+	owner = models.ForeignKey('auth.User', related_name='polymers')
 	def __unicode__(self):
 		return '%s' % (self.polymer_name)
 
 class Producer(models.Model):
 	producer_name = models.CharField(max_length = 100)
+	owner = models.ForeignKey('auth.User', related_name='producers')
 	def __unicode__(self):
 		return '%s' % (self.producer_name)
 
@@ -22,3 +24,4 @@ class Product(models.Model):
 	producer = models.ForeignKey(Producer, related_name = 'producer', null=True)
 	mold_temperature = models.FloatField()
 	melt_temperature = models.FloatField()
+	owner = models.ForeignKey('auth.User', related_name='products')
